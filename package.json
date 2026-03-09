@@ -1,14 +1,14 @@
 {
-  "name": "hmem",
+  "name": "segundo",
   "version": "0.0.0-alpha.0",
   "description": "Human memory - a zero-friction second brain CLI",
   "type": "module",
   "bin": {
-    "hmem": "./src/cli.ts"
+    "segundo": "./src/cli.ts"
   },
   "scripts": {
     "dev": "bun run src/cli.ts",
-    "build": "bun build src/cli.ts --compile --outfile hmem",
+    "build": "bun build src/cli.ts --compile --outfile segundo",
     "lint": "bunx biome check .",
     "lint:fix": "bunx biome check --write ."
   },

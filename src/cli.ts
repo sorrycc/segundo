@@ -13,7 +13,7 @@ if (args.includes("--help") || args.includes("-h") || args.length === 0) {
   console.log(`${name} ${version} - a zero-friction second brain
 
 Usage:
-  hmem <command> [options]
+  segundo <command> [options]
 
 Commands:
   add <text>       Capture a thought
@@ -26,5 +26,5 @@ Options:
   process.exit(0);
 }
 
-console.log(`Unknown command: ${args[0]}. Run "hmem --help" for usage.`);
+console.log(`Unknown command: ${args[0]}. Run "segundo --help" for usage.`);
 process.exit(1);
