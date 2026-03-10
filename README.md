@@ -3,6 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/segundo.svg)](https://www.npmjs.com/package/segundo)
 [![npm downloads](https://img.shields.io/npm/dm/segundo.svg)](https://www.npmjs.com/package/segundo)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![clawhub](https://img.shields.io/badge/clawhub-view-blue)](https://clawhub.ai/sorrycc/segundo)
 
 A zero-friction CLI for capturing and retrieving thoughts. Memories are stored as daily markdown journals with optional semantic search. Built with TypeScript, runs on Bun.
 
