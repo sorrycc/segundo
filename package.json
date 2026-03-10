@@ -4,13 +4,18 @@
   "description": "Human memory - a zero-friction second brain CLI",
   "type": "module",
   "bin": {
-    "segundo": "./src/cli.ts"
+    "segundo": "./dist/src/cli.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "bun run src/cli.ts",
-    "build": "bun build src/cli.ts --compile --outfile segundo",
+    "build": "tsc",
+    "build:bin": "bun build src/cli.ts --compile --outfile segundo",
     "lint": "bunx biome check .",
-    "lint:fix": "bunx biome check --write ."
+    "lint:fix": "bunx biome check --write .",
+    "release": "bun scripts/release.ts"
   },
   "license": "MIT",
   "keywords": [
@@ -20,6 +25,7 @@
     "cli"
   ],
   "devDependencies": {
-    "bun-types": "^1.3.10"
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
   }
 }
