@@ -35,3 +35,11 @@ export function appendTags(content: string, newTags: string[]): string {
   const tagLine = formatTagLine(allTags);
   return body ? body + "\n" + tagLine : tagLine;
 }
+
+export function removeTags(content: string, tagsToRemove: string[]): string {
+  if (tagsToRemove.length === 0) return content;
+  const { body, tags } = parseTags(content);
+  const remaining = tags.filter((t) => !tagsToRemove.includes(t));
+  if (remaining.length === 0) return body;
+  return body ? body + "\n" + formatTagLine(remaining) : formatTagLine(remaining);
+}

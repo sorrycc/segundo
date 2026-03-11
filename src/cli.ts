@@ -3,8 +3,9 @@
 import { existsSync, readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import yargsParser from "yargs-parser";
 import { resolveBrainPath, loadConfig, initBrain, ensureBrain } from "./config.js";
-import { addMemory, listMemories, editMemory, deleteMemory } from "./store.js";
+import { addMemory, listMemories, editMemory, deleteMemory, getMemory } from "./store.js";
 import { textSearch } from "./search.js";
 import {
   addEmbedding,
@@ -16,7 +17,7 @@ import {
 import { importFiles } from "./import.js";
 import { exportMemories } from "./export.js";
 import { getStats } from "./stats.js";
-import { formatTagLine } from "./tags.js";
+import { formatTagLine, appendTags, removeTags } from "./tags.js";
 import type { Memory, BatchResult } from "./types.js";
 
 function findPackageJson(): string {
@@ -32,50 +33,14 @@ const { name, version } = JSON.parse(readFileSync(findPackageJson(), "utf-8"));
 
 // --- Arg parsing ---
 
-const VALUE_FLAGS = new Set([
-  "brain",
-  "profile",
-  "tag",
-  "limit",
-  "from",
-  "to",
-  "date",
-  "format",
-]);
+const argv = yargsParser(process.argv.slice(2), {
+  string: ["brain", "profile", "from", "to", "date", "format"],
+  boolean: ["json", "help", "version", "force", "reindex", "batch", "dry-run"],
+  array: ["tag", "untag"],
+  alias: { v: "version", h: "help" },
+});
 
-function parseArgs(argv: string[]) {
-  const flags: Record<string, string | boolean> = {};
-  const positional: string[] = [];
-
-  let i = 0;
-  while (i < argv.length) {
-    const arg = argv[i];
-    if (arg === "--") {
-      positional.push(...argv.slice(i + 1));
-      break;
-    }
-    if (arg.startsWith("--")) {
-      const key = arg.slice(2);
-      if (VALUE_FLAGS.has(key) && i + 1 < argv.length) {
-        flags[key] = argv[++i];
-      } else {
-        flags[key] = true;
-      }
-    } else if (arg === "-v") {
-      flags.version = true;
-    } else if (arg === "-h") {
-      flags.help = true;
-    } else {
-      positional.push(arg);
-    }
-    i++;
-  }
-
-  return { flags, positional };
-}
-
-const { flags, positional } = parseArgs(process.argv.slice(2));
-const jsonOutput = !!flags.json;
+const jsonOutput = !!argv.json;
 
 // --- Output helpers ---
 
@@ -119,15 +84,15 @@ function readStdin(): Promise<string> {
 
 // --- Version / Help ---
 
-if (flags.version) {
+if (argv.version) {
   console.log(`${name} ${version}`);
   process.exit(0);
 }
 
-const command = positional[0];
-const args = positional.slice(1);
+const command = argv._[0] ? String(argv._[0]) : undefined;
+const args = argv._.slice(1).map(String);
 
-if (flags.help || !command) {
+if (argv.help || !command) {
   console.log(`${name} ${version} - AI-first second brain CLI
 
 Usage:
@@ -138,7 +103,7 @@ Commands:
   add <text>          Capture a memory
   search <query>      Search memories
   list                List memories
-  edit <id> <text>    Edit a memory
+  edit <id> [text]    Edit a memory (--tag/--untag)
   delete <id>         Delete memories
   import <path>       Import files as memories
   export              Export memories
@@ -156,8 +121,8 @@ Global flags:
 // --- Brain path ---
 
 const brainPath = resolveBrainPath({
-  brain: typeof flags.brain === "string" ? flags.brain : undefined,
-  profile: typeof flags.profile === "string" ? flags.profile : undefined,
+  brain: argv.brain,
+  profile: argv.profile,
 });
 
 // --- Command dispatch ---
@@ -201,8 +166,8 @@ try {
 // --- Command handlers ---
 
 async function cmdInit() {
-  const force = !!flags.force;
-  const doReindex = !!flags.reindex;
+  const force = !!argv.force;
+  const doReindex = !!argv.reindex;
 
   if (doReindex) {
     ensureBrain(brainPath);
@@ -224,9 +189,9 @@ async function cmdInit() {
 async function cmdAdd() {
   ensureBrain(brainPath);
 
-  const tag = typeof flags.tag === "string" ? flags.tag : undefined;
+  const tag = argv.tag?.[0];
   const tags = tag ? [tag] : [];
-  const isBatch = !!flags.batch;
+  const isBatch = !!argv.batch;
 
   // Collect content from args or stdin
   let contents: string[] = [];
@@ -297,9 +262,9 @@ async function cmdSearch() {
   const query = args[0];
   if (!query) error("Usage: segundo search <query>", 1);
 
-  const limit = flags.limit ? parseInt(flags.limit as string, 10) : 10;
-  const from = typeof flags.from === "string" ? flags.from : undefined;
-  const to = typeof flags.to === "string" ? flags.to : undefined;
+  const limit = argv.limit ? Number(argv.limit) : 10;
+  const from = argv.from;
+  const to = argv.to;
 
   const memories = await listMemories(brainPath, { from, to });
   const config = await loadConfig(brainPath);
@@ -333,11 +298,11 @@ async function cmdSearch() {
 async function cmdList() {
   ensureBrain(brainPath);
 
-  const date = typeof flags.date === "string" ? flags.date : undefined;
-  const from = typeof flags.from === "string" ? flags.from : undefined;
-  const to = typeof flags.to === "string" ? flags.to : undefined;
-  const tag = typeof flags.tag === "string" ? flags.tag : undefined;
-  const limit = flags.limit ? parseInt(flags.limit as string, 10) : undefined;
+  const date = argv.date;
+  const from = argv.from;
+  const to = argv.to;
+  const tag = argv.tag?.[0];
+  const limit = argv.limit ? Number(argv.limit) : undefined;
 
   const memories = await listMemories(brainPath, { date, from, to, tag, limit });
 
@@ -352,36 +317,81 @@ async function cmdList() {
 async function cmdEdit() {
   ensureBrain(brainPath);
 
-  if (args.length === 0) error("Usage: segundo edit <id> <content>", 1);
-  if (args.length % 2 !== 0) {
+  const addTags: string[] = argv.tag ?? [];
+  const rmTags: string[] = argv.untag ?? [];
+  const hasTags = addTags.length > 0 || rmTags.length > 0;
+
+  if (args.length === 0) error("Usage: segundo edit <id> [content] [--tag <tag>] [--untag <tag>]", 1);
+
+  // Determine if we have id/content pairs or tag-only edits
+  const hasContent = args.length >= 2;
+
+  if (hasContent && args.length % 2 !== 0) {
     error(
       `Edit requires alternating id/content pairs. Got ${args.length} arguments.`,
       1,
     );
   }
 
+  if (!hasContent && !hasTags) {
+    error("Nothing to edit. Provide content or --tag/--untag flags.", 1);
+  }
+
   const config = await loadConfig(brainPath);
   const hasEmbeddings = isProviderConfigured(config);
   const results: BatchResult[] = [];
 
-  for (let i = 0; i < args.length; i += 2) {
-    const id = args[i];
-    const content = args[i + 1].replace(/\\n/g, "\n");
-    try {
-      const memory = await editMemory(brainPath, id, content);
-      if (hasEmbeddings) {
-        try {
-          await deleteEmbedding(brainPath, id);
-          await addEmbedding(brainPath, config, id, memory.content);
-        } catch {}
+  if (hasContent) {
+    // id/content pairs, optionally with --tag/--untag
+    for (let i = 0; i < args.length; i += 2) {
+      const id = args[i];
+      let content = args[i + 1].replace(/\\n/g, "\n");
+      content = appendTags(content, addTags);
+      content = removeTags(content, rmTags);
+      try {
+        const memory = await editMemory(brainPath, id, content);
+        if (hasEmbeddings) {
+          try {
+            await deleteEmbedding(brainPath, id);
+            await addEmbedding(brainPath, config, id, memory.content);
+          } catch {}
+        }
+        results.push({ id, status: "ok" });
+      } catch (e: any) {
+        results.push({ id, status: "error", error: e.message });
       }
-      results.push({ id, status: "ok" });
-    } catch (e: any) {
-      results.push({ id, status: "error", error: e.message });
+    }
+  } else {
+    // Tag-only edits: each arg is an id
+    for (const id of args) {
+      try {
+        const found = await getMemory(brainPath, id);
+        if (!found) {
+          const err: any = new Error(`Memory ${id} not found.`);
+          err.code = 2;
+          throw err;
+        }
+        let content = found.memory.content;
+        if (found.memory.tags.length > 0) {
+          content += "\n" + formatTagLine(found.memory.tags);
+        }
+        content = appendTags(content, addTags);
+        content = removeTags(content, rmTags);
+        const memory = await editMemory(brainPath, id, content);
+        if (hasEmbeddings) {
+          try {
+            await deleteEmbedding(brainPath, id);
+            await addEmbedding(brainPath, config, id, memory.content);
+          } catch {}
+        }
+        results.push({ id, status: "ok" });
+      } catch (e: any) {
+        results.push({ id, status: "error", error: e.message });
+      }
     }
   }
 
-  if (args.length === 2) {
+  if (results.length === 1) {
     const r = results[0];
     if (r.status === "error") error(r.error!, (r as any).code ?? 2);
     if (jsonOutput) output(r);
@@ -440,8 +450,8 @@ async function cmdImport() {
   if (args.length === 0) error("Usage: segundo import <path> [path...]", 1);
 
   const config = await loadConfig(brainPath);
-  const tag = typeof flags.tag === "string" ? flags.tag : undefined;
-  const dryRun = !!flags["dry-run"];
+  const tag = argv.tag?.[0];
+  const dryRun = !!argv["dry-run"];
 
   const results = await importFiles(args, {
     tag,
@@ -463,10 +473,10 @@ async function cmdExport() {
   ensureBrain(brainPath);
 
   const format =
-    flags.format === "json" ? "json" : ("md" as "md" | "json");
-  const from = typeof flags.from === "string" ? flags.from : undefined;
-  const to = typeof flags.to === "string" ? flags.to : undefined;
-  const tag = typeof flags.tag === "string" ? flags.tag : undefined;
+    argv.format === "json" ? "json" : ("md" as "md" | "json");
+  const from = argv.from;
+  const to = argv.to;
+  const tag = argv.tag?.[0];
 
   const result = await exportMemories({ format, from, to, tag, brainPath });
   if (result) process.stdout.write(result);

@@ -26,6 +26,10 @@
   ],
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/yargs-parser": "^21.0.3",
     "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "yargs-parser": "^22.0.0"
   }
 }
