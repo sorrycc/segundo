@@ -1,15 +1,6 @@
 ---
 name: segundo
-description: |
-  CLI tool for capturing and retrieving thoughts as a second brain. Stores memories as daily markdown journals with optional semantic search.
-
-  USE FOR:
-  - Capturing thoughts, notes, ideas, recommendations
-  - Searching memories by text or semantic similarity
-  - Listing and filtering memories by date range or tags
-  - Importing/exporting notes, viewing brain statistics
-
-  Requires: bun or npm. Semantic search requires an embedding provider (Ollama or OpenAI).
+description: CLI tool for capturing, organizing, and retrieving thoughts as a second brain. USE FOR: adding/editing/searching/deleting memories, managing tags, importing/exporting notes.
 ---
 
 # segundo CLI
