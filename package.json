@@ -1,6 +1,6 @@
 {
   "name": "segundo",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Human memory - a zero-friction second brain CLI",
   "type": "module",
   "bin": {
