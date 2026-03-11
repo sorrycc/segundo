@@ -247,7 +247,7 @@ Inspired by [memsearch](https://github.com/zilliztech/memsearch) — lightweight
 ### Providers [Phase 2]
 
 - **Ollama**: `POST http://localhost:11434/api/embed` — local, free, offline
-- **OpenAI**: `POST https://api.openai.com/v1/embeddings` — cloud, requires API key
+- **OpenAI-compatible**: `POST <openaiBaseUrl>/embeddings` (defaults to `https://api.openai.com/v1`) — cloud, requires API key
 
 ### Config [Phase 1]
 
@@ -257,7 +257,8 @@ Inspired by [memsearch](https://github.com/zilliztech/memsearch) — lightweight
     "provider": "ollama",
     "model": "nomic-embed-text",
     "ollamaUrl": "http://localhost:11434",
-    "openaiApiKey": "$OPENAI_API_KEY"
+    "openaiApiKey": "$OPENAI_API_KEY",
+    "openaiBaseUrl": "https://api.openai.com/v1"
   }
 }
 ```

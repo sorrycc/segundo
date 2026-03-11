@@ -164,4 +164,17 @@ Configure in `~/.segundo/config.json`:
 }
 ```
 
-Supports **Ollama** (local, free) and **OpenAI** (cloud, requires `openaiApiKey` or `$OPENAI_API_KEY`).
+Or with an OpenAI-compatible provider:
+
+```json
+{
+  "embeddings": {
+    "provider": "openai",
+    "model": "text-embedding-3-small",
+    "openaiApiKey": "$OPENAI_API_KEY",
+    "openaiBaseUrl": "https://api.openai.com/v1"
+  }
+}
+```
+
+Supports **Ollama** (local, free) and **OpenAI**-compatible providers (cloud, requires `openaiApiKey` or `$OPENAI_API_KEY`).
