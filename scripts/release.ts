@@ -82,7 +82,9 @@ async function main() {
   console.log("\nGit tag...");
   await run(["git", "tag", `v${newVersion}`], { dry: dryRun });
 
-  // 6. Publish
+  // 6. Login & Publish
+  console.log("\nLogin...");
+  await run(["npm", "login"], { dry: dryRun, interactive: true });
   console.log("\nPublish...");
   await run(["npm", "publish"], { dry: dryRun, interactive: true });
 
