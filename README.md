@@ -106,7 +106,20 @@ Configure an embedding provider in `~/.segundo/config.json`:
 }
 ```
 
-Supports **Ollama** (local, free) and **OpenAI** (cloud, requires API key). Falls back to text search when unavailable.
+OpenAI-compatible providers can also be configured:
+
+```json
+{
+  "embeddings": {
+    "provider": "openai",
+    "model": "text-embedding-3-small",
+    "openaiApiKey": "$OPENAI_API_KEY",
+    "openaiBaseUrl": "https://api.openai.com/v1"
+  }
+}
+```
+
+Supports **Ollama** (local, free) and **OpenAI**-compatible providers (cloud, requires API key). Falls back to text search when unavailable.
 
 Rebuild the index anytime with `segundo init --reindex`.
 

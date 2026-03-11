@@ -46,7 +46,13 @@ export async function embed(config: Config, text: string): Promise<Float32Array>
       : config.embeddings?.openaiApiKey;
     if (!apiKey) throw new Error("OpenAI API key not configured");
 
-    const res = await fetch("https://api.openai.com/v1/embeddings", {
+    const baseUrl = (
+      config.embeddings?.openaiBaseUrl ??
+      process.env.OPENAI_BASE_URL ??
+      "https://api.openai.com/v1"
+    ).replace(/\/$/, "");
+
+    const res = await fetch(`${baseUrl}/embeddings`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

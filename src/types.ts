@@ -12,6 +12,7 @@ export interface Config {
     model?: string;
     ollamaUrl?: string;
     openaiApiKey?: string;
+    openaiBaseUrl?: string;
   };
 }
 
