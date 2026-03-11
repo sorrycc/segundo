@@ -74,6 +74,9 @@ segundo list --from 2026-03-01 --to 2026-03-10
 ```bash
 segundo edit <id> "new content"
 segundo edit id1 "content1" id2 "content2"   # batch
+segundo edit <id> --tag work --tag urgent     # tag-only edit
+segundo edit <id> --untag draft              # remove tag
+segundo edit <id> "new content" --tag work   # content + tag
 ```
 
 ### delete

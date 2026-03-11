@@ -38,7 +38,7 @@ segundo list --limit 5
 | `add <text>` | Capture a memory |
 | `search <query>` | Search memories (semantic or text) |
 | `list` | List memories, newest first |
-| `edit <id> <text>` | Replace a memory's content |
+| `edit <id> [text]` | Edit a memory (`--tag`/`--untag`) |
 | `delete <id>` | Delete one or more memories |
 | `import <path>` | Import .md/.txt files as memories |
 | `export` | Export memories to stdout |
@@ -80,6 +80,8 @@ cat notes.txt | segundo add --batch
 segundo add "thought one" "thought two" "thought three"
 segundo delete id1 id2 id3
 segundo edit id1 "new content" id2 "other content"
+segundo edit id1 --tag work --tag urgent
+segundo edit id1 --untag draft
 ```
 
 ## Profiles
